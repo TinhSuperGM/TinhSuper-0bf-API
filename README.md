@@ -1,4 +1,16 @@
-- Premium key: chỉ admin
-- Run key: chỉ chạy script
-- Code thật không bao giờ nằm trong file obf
-- Roblox loadstring(game:HttpGet())() chạy 100%
+# TinhSuper Obfuscation API
+
+## Endpoints
+
+POST /add_script
+- premium_key
+- id
+- run_key
+- script
+
+POST /run
+- id
+- run_key
+
+POST /list
+- premium_key
