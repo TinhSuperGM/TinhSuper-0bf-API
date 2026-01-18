@@ -1,0 +1,4 @@
+- Premium key: chỉ admin
+- Run key: chỉ chạy script
+- Code thật không bao giờ nằm trong file obf
+- Roblox loadstring(game:HttpGet())() chạy 100%
