@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import json, os, random, string
+import json, os, random, string, time
 
 app = Flask(__name__)
 
@@ -11,8 +11,11 @@ KEY_DB = "keys.json"
 def load_json(path):
     if not os.path.exists(path):
         return {}
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
@@ -24,11 +27,15 @@ def gen_id():
 def gen_run_key():
     return "Run_" + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(19))
 
+def gen_noise(n=20):
+    chars = string.ascii_letters + string.digits + "!@#$%^&*()_+-={}[]<>?,."
+    return ''.join(random.choice(chars) for _ in range(n))
+
 # ================== LOAD DB ==================
 
 scripts = load_json(SCRIPT_DB)
 keys = load_json(KEY_DB)
-PREMIUM_KEY = keys.get("premium_key")
+PREMIUM_KEY = keys.get("premium_key", "")
 
 # ================== ROUTES ==================
 
@@ -48,7 +55,8 @@ def add_script():
 
     scripts[sid] = {
         "run_key": run_key,
-        "script": data["script"]
+        "script": data["script"],
+        "created_at": int(time.time())
     }
 
     save_json(SCRIPT_DB, scripts)
@@ -75,7 +83,7 @@ def run_script():
     if entry["run_key"] != run_key:
         return jsonify({"error": "Invalid run key"}), 403
 
-    # ⚠️ Roblox SẼ THẤY SCRIPT Ở ĐÂY (bắt buộc)
+    # Roblox sẽ nhận script ở đây
     return jsonify({
         "script": entry["script"]
     })
@@ -97,6 +105,28 @@ def admin_get():
     return jsonify({
         "script": scripts[sid]["script"]
     })
+
+# ---------- PING (RESET STORE) ----------
+@app.route("/ping", methods=["GET"])
+def ping():
+    """
+    - Keep Render alive
+    - Xoá toàn bộ script cũ
+    - Ghi đè bằng 1 script rác
+    """
+    global scripts
+
+    noise_id = "noise"
+    scripts = {
+        noise_id: {
+            "run_key": "noise",
+            "script": gen_noise(20),
+            "created_at": int(time.time())
+        }
+    }
+
+    save_json(SCRIPT_DB, scripts)
+    return "pong", 200
 
 # ================== START ==================
 
